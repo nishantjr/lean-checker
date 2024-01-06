@@ -40,9 +40,9 @@ def prop2 := Proof.prop2
 def mp := Proof.modus_ponens
 
 def imp_refl: Proof :=
-    (mp (mp (inst (inst Proof.prop2 1 ph0_implies_ph0)
-                                    2 ph0)
-            (inst Proof.prop1 1 ph0_implies_ph0)
+    (mp (mp (inst (inst prop2 1 ph0_implies_ph0)
+                              2 ph0)
+            (inst prop1 1 ph0_implies_ph0)
         )
         prop1
     )
