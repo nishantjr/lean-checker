@@ -12,22 +12,22 @@ def ph1 : Pattern := (Pattern.metavar 1)
 def ph2 : Pattern := (Pattern.metavar 2)
 def ph0_implies_ph0 : Pattern := (implies ph0 ph0)
 
-def Pattern.instantiate(p: Pattern)(id: Nat)(plug: Pattern) : Pattern :=
-    match p with
+def Pattern.instantiate(p: Pattern)(subst: Nat × Pattern) : Pattern :=
+    match subst with | (id, plug) => match p with
       | Pattern.metavar id' => if id' = id then plug else p
       | Pattern.bot => Pattern.bot
-      | Pattern.implies left right => Pattern.implies (instantiate left id plug) (instantiate right id plug)
+      | Pattern.implies left right => Pattern.implies (instantiate left (id, plug)) (instantiate right (id, plug))
 
 theorem test_inst_1 :
-    (Pattern.instantiate Pattern.bot 0 ph0) = Pattern.bot := by rfl
+    (Pattern.instantiate Pattern.bot (0, ph0)) = Pattern.bot := by rfl
 theorem test_inst_2 :
-    (Pattern.instantiate ph0 0 ph0) = ph0 := by rfl
+    (Pattern.instantiate ph0 (0, ph0)) = ph0 := by rfl
 theorem test_inst_3 :
-    (Pattern.instantiate ph1 0 ph0) = ph1 := by rfl
+    (Pattern.instantiate ph1 (0, ph0)) = ph1 := by rfl
 theorem test_inst_4 :
-    (Pattern.instantiate ph0_implies_ph0 0 ph1) = (implies ph1 ph1) := by rfl
+    (Pattern.instantiate ph0_implies_ph0 (0, ph1)) = (implies ph1 ph1) := by rfl
 theorem test_inst_5 :
-    (Pattern.instantiate ph0_implies_ph0 0 ph0_implies_ph0) = (implies ph0_implies_ph0 ph0_implies_ph0) := by rfl
+    (Pattern.instantiate ph0_implies_ph0 (0, ph0_implies_ph0)) = (implies ph0_implies_ph0 ph0_implies_ph0) := by rfl
 
 
 inductive Proof where
@@ -46,7 +46,7 @@ def Proof.conclusion(pi: Proof) : Option Pattern :=
       | Proof.instantiate pi' id' plug' =>
         match pi'.conclusion with
           | none => none
-          | some concl' => (concl'.instantiate id' plug')
+          | some concl' => (concl'.instantiate (id', plug'))
       | Proof.prop1 => (implies ph0 (implies ph1 ph0))
       | Proof.prop2 => (implies (implies ph0 (implies ph1 ph2)) (implies (implies ph0  ph1) (implies ph0 ph2)))
       | Proof.modus_ponens pi1 pi2 =>
