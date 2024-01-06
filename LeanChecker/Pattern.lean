@@ -44,5 +44,5 @@ def imp_refl: Proof :=
                               2 ph0)
             (inst prop1 1 ph0_implies_ph0)
         )
-        prop1
+        (inst prop1 1 ph0)
     )
