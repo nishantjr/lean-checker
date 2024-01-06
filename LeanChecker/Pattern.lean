@@ -3,11 +3,13 @@ inductive Pattern where
     | metavar(id: Nat) : Pattern
     | bot : Pattern
     | implies(left: Pattern)(right: Pattern) : Pattern
+deriving DecidableEq, Repr
 
 def implies := Pattern.implies
 
 def ph0 : Pattern := (Pattern.metavar 0)
 def ph1 : Pattern := (Pattern.metavar 1)
+def ph2 : Pattern := (Pattern.metavar 2)
 def ph0_implies_ph0 : Pattern := (implies ph0 ph0)
 
 def Pattern.instantiate(p: Pattern)(id: Nat)(plug: Pattern) : Pattern :=
@@ -39,6 +41,22 @@ def prop1 := Proof.prop1
 def prop2 := Proof.prop2
 def mp := Proof.modus_ponens
 
+def Proof.conclusion(pi: Proof) : Option Pattern :=
+    match pi with
+      | Proof.instantiate pi' id' plug' =>
+        match pi'.conclusion with
+          | none => none
+          | some concl' => (concl'.instantiate id' plug')
+      | Proof.prop1 => (implies ph0 (implies ph1 ph0))
+      | Proof.prop2 => (implies (implies ph0 (implies ph1 ph2)) (implies (implies ph0  ph1) (implies ph0 ph2)))
+      | Proof.modus_ponens pi1 pi2 =>
+        match (pi2.conclusion, pi1.conclusion) with
+          | (_, none) => none
+          | (none, _) => none
+          | (some concl_1, some (Pattern.implies concl_2_left concl_2_right)) =>
+                if concl_2_left = concl_1 then concl_2_right else none
+          | (some _, some _) => none
+
 def imp_refl: Proof :=
     (mp (mp (inst (inst prop2 1 ph0_implies_ph0)
                               2 ph0)
@@ -46,3 +64,5 @@ def imp_refl: Proof :=
         )
         (inst prop1 1 ph0)
     )
+
+theorem test_imp_refl : imp_refl.conclusion = some ph0_implies_ph0 := by rfl
