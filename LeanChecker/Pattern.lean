@@ -1,4 +1,3 @@
-
 inductive Pattern where
     | metavar(id: Nat) : Pattern
     | bot : Pattern
