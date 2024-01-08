@@ -1,7 +1,6 @@
-
 inductive Pattern where
     | metavar(id: Nat) : Pattern
-    | bot : Pattern
+    | bot : Pattern --- TODO: Replace with $mu X. X$ Not needed by $phi -> phi$
     | implies(left: Pattern)(right: Pattern) : Pattern
 deriving DecidableEq, Repr
 
