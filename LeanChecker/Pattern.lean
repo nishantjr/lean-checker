@@ -38,6 +38,7 @@ inductive Proof where
     | prop1 : Proof
     | prop2 : Proof
     | modus_ponens(left: Proof)(right: Proof) : Proof
+deriving DecidableEq, Repr
 
 def inst := Proof.instantiate
 def prop1 := Proof.prop1
