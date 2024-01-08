@@ -2,3 +2,5 @@
 -- Import modules here that should be built as part of the library.
 import «LeanChecker».Basic
 import «LeanChecker».Pattern
+import «LeanChecker».Proof
+import «LeanChecker».Prover
