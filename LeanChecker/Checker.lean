@@ -27,7 +27,7 @@ inductive Term where
     | proved(pattern: Pattern)
 deriving DecidableEq, Repr
 
-structure ProverState where
+structure CheckerState where
     memory : List Term
     stack  : List Term
 deriving DecidableEq, Repr
@@ -44,7 +44,7 @@ def mk_subst(rev_ids: List Nat)(stack: List Term) : Option ((List (Nat × Patter
                 | _ => none
 
 open Instruction
-def execute_instruction(state: ProverState)(instr: Instruction) : Option ProverState :=
+def execute_instruction(state: CheckerState)(instr: Instruction) : Option CheckerState :=
     match instr with
       | metavar n
         => some { state with stack  := Term.pattern (Pattern.metavar n) :: state.stack  }
@@ -86,7 +86,7 @@ def execute_instruction(state: ProverState)(instr: Instruction) : Option ProverS
                        | some loaded => some { state with stack := loaded :: state.stack }
                        | none => none
 
-def execute_instructions(state: ProverState) (instrs: List Instruction) : Option ProverState :=
+def execute_instructions(state: CheckerState) (instrs: List Instruction) : Option CheckerState :=
     match instrs with
     | [] => state
     | instr :: instrs'
@@ -116,7 +116,7 @@ def imp_refl_instrs :=
     ]
 
 theorem test_exec_imp_refl :
-     (execute_instructions { stack := [], memory := [] : ProverState } imp_refl_instrs)
-   = { stack := [Term.proved ph0_implies_ph0], memory := [Term.pattern ph0_implies_ph0, Term.pattern ph0] : ProverState }
+     (execute_instructions { stack := [], memory := [] : CheckerState } imp_refl_instrs)
+   = { stack := [Term.proved ph0_implies_ph0], memory := [Term.pattern ph0_implies_ph0, Term.pattern ph0] : CheckerState }
     := by rfl
 

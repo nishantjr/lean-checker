@@ -3,4 +3,4 @@
 import «LeanChecker».Basic
 import «LeanChecker».Pattern
 import «LeanChecker».Proof
-import «LeanChecker».Prover
+import «LeanChecker».Checker
