@@ -1,5 +1,5 @@
 {
-  "packages": ["lean4@latest"],
+  "packages": [],
   "shell": {
     "init_hook": [
       "echo 'Welcome to devbox!' > /dev/null"
