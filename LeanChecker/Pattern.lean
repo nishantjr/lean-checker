@@ -32,6 +32,3 @@ theorem test_inst_4 :
     (Pattern.instantiate ph0_implies_ph0 [(0, ph1)]) = (implies ph1 ph1) := by rfl
 theorem test_inst_5 :
     (Pattern.instantiate ph0_implies_ph0 [(0, ph0_implies_ph0)]) = (implies ph0_implies_ph0 ph0_implies_ph0) := by rfl
-
-
-
