@@ -37,8 +37,9 @@ def Proof.conclusion(pi: Proof) : Option Pattern :=
 
 
 def imp_refl: Proof :=
-    (mp (mp (inst prop2 [(1, ph0_implies_ph0), (2, ph0)])
-            (inst prop1 [(1, ph0_implies_ph0)])
+    (mp (inst (mp (inst prop2 [(2, ph0)])
+                  prop1)
+              [(1, ph0_implies_ph0)]
         )
         (inst prop1 [(1, ph0)])
     )
