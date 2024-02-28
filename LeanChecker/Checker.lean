@@ -33,12 +33,12 @@ structure CheckerState where
 deriving DecidableEq, Repr
 
 --- TODO: Could be implemented with `take n`, and `zip`?
-def mk_subst(rev_ids: List Nat)(stack: List Term) : Option ((List (Nat × Pattern)) × List Term) :=
+def subst_from_stack(rev_ids: List Nat)(stack: List Term) : Option ((List (Nat × Pattern)) × List Term) :=
     match rev_ids with
       | [] => some ([], stack)
       | id :: ids_rest => match stack with
                 | Term.pattern p :: stack_rest
-                => match mk_subst ids_rest stack_rest with
+                => match subst_from_stack ids_rest stack_rest with
                     | none => none
                     | some (ret_subst, ret_stack) => (((id, p) :: ret_subst), ret_stack)
                 | _ => none
@@ -72,12 +72,12 @@ def execute_instruction(state: CheckerState)(instr: Instruction) : Option Checke
         => match state.stack with
             | [] => none
             | p :: stack_tail =>
-                match mk_subst (rev ids) stack_tail with
+                match subst_from_stack (rev ids) stack_tail with
                 | none => none
                 | some (subst, rest_stack) =>
                     match p with
-                      | Term.pattern pat => some { state with stack := Term.pattern (pat.instantiate subst) :: rest_stack }
-                      | Term.proved  pat => some { state with stack := Term.proved  (pat.instantiate subst) :: rest_stack }
+                      | Term.pattern pat => some { state with stack := Term.pattern (pat.instantiate $ mkSubst subst) :: rest_stack }
+                      | Term.proved  pat => some { state with stack := Term.proved  (pat.instantiate $ mkSubst subst) :: rest_stack }
 
       | save      => match state.stack with
                        | head :: _ => some { state with memory := head :: state.memory }
@@ -119,4 +119,3 @@ theorem test_exec_imp_refl :
      (execute_instructions { stack := [], memory := [] : CheckerState } imp_refl_instrs)
    = { stack := [Term.proved ph0_implies_ph0], memory := [Term.pattern ph0_implies_ph0, Term.pattern ph0] : CheckerState }
     := by rfl
-

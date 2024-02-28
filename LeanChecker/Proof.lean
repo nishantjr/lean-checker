@@ -2,11 +2,10 @@ import LeanChecker.Pattern
 import Mathlib.Tactic.Contrapose
 
 inductive Proof where
-    | instantiate(schema: Proof)(subst: List (Nat × Pattern)) : Proof /-- TODO: We need simultanous substitutions here --/
+    | instantiate(schema: Proof)(subst: Nat -> Option Pattern) : Proof /-- TODO: We need simultanous substitutions here --/
     | prop1 : Proof
     | prop2 : Proof
     | modus_ponens(left: Proof)(right: Proof) : Proof
-deriving DecidableEq, Repr
 
 def inst := Proof.instantiate
 def prop1 := Proof.prop1
@@ -35,16 +34,36 @@ def Proof.conclusion(pi: Proof) : Option Pattern :=
       | Proof.prop2 => prop2_concl
       | Proof.modus_ponens pi1 pi2 => mp_conclusion pi2.conclusion  pi1.conclusion
 
-
 def imp_refl: Proof :=
-    (mp (inst (mp (inst prop2 [(2, ph0)])
+    (mp (inst (mp (inst prop2 $ subst_from_pairs [(2, ph0)])
                   prop1)
-              [(1, ph0_implies_ph0)]
+              $ subst_from_pairs [(1, ph0_implies_ph0)]
         )
-        (inst prop1 [(1, ph0)])
+        (inst prop1 $ subst_from_pairs [(1, ph0)])
     )
 
 theorem test_imp_refl : imp_refl.conclusion = some ph0_implies_ph0 := by rfl
+
+def merge_instantiation(inner: Nat -> Option Pattern)(outer: Nat -> Option Pattern)
+ : Nat -> Option Pattern :=
+    fun(n) => match inner n with
+    | none => outer n
+    | some p => some $ p.instantiate outer
+
+def push_instantiations(p: Proof) : Proof :=
+    match p with
+    | Proof.prop1 => p
+    | Proof.prop2 => p
+    | (Proof.instantiate Proof.prop1 _)  => p
+    | (Proof.instantiate Proof.prop2 _)  => p
+    | (Proof.modus_ponens l r) => (Proof.modus_ponens (push_instantiations l) (push_instantiations r))
+    | (Proof.instantiate (Proof.modus_ponens l' r') subst)
+         => (Proof.modus_ponens (push_instantiations (Proof.instantiate l' subst))
+                                (push_instantiations (Proof.instantiate r' subst)))
+    | (Proof.instantiate (Proof.instantiate p' subst_inner) subst_outer)
+         => (Proof.instantiate p'  (merge_instantiation subst_inner subst_outer))
+
+
 
 @[simp]
 def Proof.wf(p: Proof) : Bool := p.conclusion != none
@@ -90,11 +109,11 @@ def mp_wf_left : (Proof.modus_ponens l r).wf -> l.wf ∧ r.wf :=
         | some (Pattern.metavar _)  => cases lconc <;> simp[h_left_conc, h_right_conc]
     }
 
-theorem instantiate_commutes_with_implies(left: Pattern)(right: Pattern)(subst: List (Nat × Pattern))
+theorem instantiate_commutes_with_implies(left: Pattern)(right: Pattern)(subst: Nat -> Option Pattern)
     : ((Pattern.implies left right).instantiate subst) = (Pattern.implies (left.instantiate subst) (right.instantiate subst))
     := by rw [Pattern.instantiate]
 
-theorem instantiate_commutes_with_mp(left: Proof)(right: Proof)(subst: List (Nat × Pattern))
+theorem instantiate_commutes_with_mp(left: Proof)(right: Proof)(subst: Nat -> Option Pattern)
      (h_left_conc : left.conclusion = (Pattern.implies phi psi))
      (h_right_conc : right.conclusion = some phi):
       (Proof.instantiate (Proof.modus_ponens left right) subst).conclusion
@@ -102,19 +121,3 @@ theorem instantiate_commutes_with_mp(left: Proof)(right: Proof)(subst: List (Nat
     := by {
     simp [  mp_conclusion, h_right_conc, h_left_conc, instantiate_commutes_with_implies]
     }
-
-def merge_instantiation(inner: List (Nat × Pattern))(outer: List (Nat × Pattern)) : List (Nat × Pattern) :=
-    sorry
-
-def push_instantiations(p: Proof) : Proof :=
-    match p with
-    | Proof.prop1 => p
-    | Proof.prop2 => p
-    | (Proof.instantiate Proof.prop1 subst)  => p
-    | (Proof.instantiate Proof.prop2 subst)  => p
-    | (Proof.modus_ponens l r) => (Proof.modus_ponens (push_instantiations l) (push_instantiations r))
-    | (Proof.instantiate (Proof.modus_ponens l' r') subst)
-         => (Proof.modus_ponens (push_instantiations (Proof.instantiate l' subst))
-                                (push_instantiations (Proof.instantiate r' subst)))
-    | (Proof.instantiate (Proof.instantiate p' subst_inner) subst_outer)
-         => (Proof.instantiate p'  (merge_instantiation subst_inner subst_outer))
