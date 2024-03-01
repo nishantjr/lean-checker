@@ -1,11 +1,19 @@
 import Lake
 open Lake DSL
 
+def moreLeanArgs := #[
+  "-Dpp.unicode.fun=true" -- pretty-prints `fun a ↦ b`
+]
+
+def moreServerArgs := moreLeanArgs
+
+
 package «lean-checker» where
-  -- add package configuration options here
+  moreLeanArgs := moreLeanArgs
+  moreServerArgs := moreServerArgs
 
 lean_lib «LeanChecker» where
-  -- add library configuration options here
+  moreLeanArgs := moreLeanArgs
 
 @[default_target]
 lean_exe «lean-checker» where
