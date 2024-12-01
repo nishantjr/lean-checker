@@ -74,13 +74,8 @@ def push_instantiations(p: Proof) : Proof :=
 
 example : (push_instantiations imp_refl).conclusion = some ph0_implies_ph0 := by rfl
 
-
-
 @[simp]
-def Proof.wf(p: Proof) : Bool := p.conclusion != none
-
-
-
+def Proof.wf(p: Proof) : Prop := ∃ phi, p.conclusion = some phi
 
 theorem mp_wf_prime : (Proof.modus_ponens l r).conclusion = some psi
                          -> ∃ phi, r.conclusion = some phi ∧ l.conclusion = (some $ Pattern.implies phi psi) :=
@@ -136,26 +131,26 @@ theorem instantiate_commutes_with_mp(left: Proof)(right: Proof)(subst: Nat -> Op
     simp [  mp_conclusion, h_right_conc, h_left_conc, instantiate_commutes_with_implies]
     }
 
-
 theorem xxx (p: Proof) (p_has_conclusion : p.wf) :
     (push_instantiations p).conclusion = p.conclusion := by
     induction p with
     | prop1 => rfl
     | prop2 => rfl
     | modus_ponens l r pl pr =>
-        rw [(mp_wf p_has_conclusion).1] at pl
-        simp at pl
-        rw [(mp_wf p_has_conclusion).2] at pr
-        simp at pr
-        simp [pl, pr]
-
+        have l : Proof.conclusion (push_instantiations l) = Proof.conclusion l
+        · exact pl (mp_wf p_has_conclusion).1
+        have r : Proof.conclusion (push_instantiations r) = Proof.conclusion r
+        · exact pr (mp_wf p_has_conclusion).2
+        simp [l,r]
     | instantiate p' subst h' =>
         have pp_has_concl : p'.wf := instantiate_wf p_has_conclusion
-        rw [pp_has_concl] at h'
+        have xx := h' pp_has_concl
         cases p' with
         | prop1 => rfl
         | prop2 => rfl
         | modus_ponens l r =>
+          rcases pp_has_concl with ⟨pp_concl, pp_has_concl⟩
+          . simp[pp_has_concl,push_instantiations]
             simp at h'
             unfold push_instantiations
             have xxx := (mp_wf pp_has_concl).1
